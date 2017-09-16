@@ -26,7 +26,7 @@ class World {
 
 		this.obstacles = [];
 		this.lost = false;
-		this.drawing = {};
+		this.drawing = {"flappy": undefined, "obstacles": {}, "score": undefined};
 
 		this.score = 0;
 	}
@@ -47,26 +47,42 @@ class World {
 				"scored": false}
 	}
 
-	start() {
-
-	}
-
 	prepareDrawing() {
 		// Creates canvas 320 × 200 at 10, 50
 		this.paper = Raphael(50, 50, this.width, this.height);
 
-		this.drawing = {
-			'flappy': this.paper.circle(this.flappy.position, this.flappy.altitude, this.ratio/2),
-			'obstacles': {},
-			'score': this.paper.text(this.width/2, 50, "0")
-		};
+		if(this.drawing.flappy == undefined){
+			this.drawing.flappy = this.paper.circle(this.flappy.position, this.flappy.altitude, this.ratio/2);
+		}
+		if(this.drawing.score == undefined)
+			this.drawing.score = this.paper.text(this.width/2, 50, "0")
 
 		this.drawing.score.attr({ "font-weight": "bold",
 								  "font-size": 50 });
 
 		this.drawing.flappy.attr({"fill": "#f00",
 								  "stroke": "#fff" });
+	}
 
+	reset() {
+		this.destroy()
+		this.flappy = new Flappy(this.ratio, Math.ceil(this.height/2), 0.2*this.width);
+		this.grid = new Array(this.width).fill(new Array(this.height).fill(0));
+		this.score = 0;
+		this.obstacles = []
+		this.drawing.obstacles = {}
+		this.lost = false;
+	}
+
+	destroy() {
+		for (let key in this.drawing.obstacles) {
+			if (!this.drawing.obstacles.hasOwnProperty(key)) continue;
+			let obstacle = this.drawing.obstacles[key];
+			obstacle.top.remove();
+			obstacle.top = false;
+			obstacle.bot.remove();
+			obstacle.bot = false;
+		}
 	}
 
 	createRaphaelObstacle() {
@@ -99,6 +115,7 @@ class World {
 	}
 
 	draw() {
+		if(this.lost) return;
 		// Y is reversed in the drawing
 		this.drawing.flappy.attr("cx", this.flappy.position);
 		this.drawing.flappy.attr("cy", this.height - this.flappy.altitude);
@@ -210,13 +227,16 @@ class World {
 
 class Game {
 	constructor(speed = 60, draw = false) {
-		this.reset()
 		this.dt = 1./speed;
 		this.visual = draw;
+		this.world = new World()
+		this.reset()
 	}
 
 	reset() {
-		this.world = new World()
+		// Destroy is for the visual game
+		this.world.reset();
+		if(this.visual) this.prepareDrawing();
 	}
 
 	get flappy() {
@@ -264,15 +284,17 @@ var game;
 window.onload = function() {
 	game = new Game(60, true)
 	game.start();
-	game.prepareDrawing()
 
 	document.body.onkeyup = function(e){
-	    if(e.keyCode == 32){
-	        game.jump()
-	    }
-	    if(e.keyCode == 13){
-	        game.update()
-	    }
+		if(e.keyCode == 32){
+			game.jump();
+		}
+		if(e.keyCode == 13){
+			game.jump();
+		}
+		if(e.keyCode == 82){
+			game.reset();
+		}
 	}
 	setInterval(function(){game.update()}, 17);
 }
