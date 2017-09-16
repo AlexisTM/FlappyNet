@@ -220,12 +220,21 @@ class Game {
 	}
 
 	get flappy() {
-		return { "altitude": this.world.flappy.altitude,
+		return { "position": this.world.flappy.position,
+				 "altitude": this.world.flappy.altitude,
 				 "velocity": this.world.flappy.velocity };
 	}
 
 	get occupancy() {
 		return this.world.occupancy;
+	}
+
+	get score() {
+		return this.world.score;
+	}
+
+	get lost() {
+		return this.world.lost;
 	}
 
 	draw() {
@@ -252,11 +261,7 @@ class Game {
 
 
 var game;
-
 window.onload = function() {
-	// Get a reference to the canvas object first
-	var canvas = document.getElementById('playground');
-
 	game = new Game(60, true)
 	game.start();
 	game.prepareDrawing()
@@ -269,6 +274,5 @@ window.onload = function() {
 	        game.update()
 	    }
 	}
-
 	setInterval(function(){game.update()}, 17);
 }
